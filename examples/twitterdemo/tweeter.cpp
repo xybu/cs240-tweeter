@@ -8,8 +8,8 @@
 #include "o1requestor.h"
 #include "o2settingsstore.h"
 
-const char O2_CONSUMER_KEY[] = "2vHeyIxjywIadjEhvbDpg";
-const char O2_CONSUMER_SECRET[] = "Xfwe195Kp3ZpcCKgkYs7RKfugTm8EfpLkQvsKfX2vvs";
+const char O2_CONSUMER_KEY[] = "DLzPNfbuCo82P9709E7zw";
+const char O2_CONSUMER_SECRET[] = "QelJ88yFCU1eBwEDZxVZnYiVFoikIKc6hQWlD0gw";
 
 const int localPort = 8888;
 

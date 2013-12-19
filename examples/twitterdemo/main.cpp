@@ -14,6 +14,7 @@ const char OPT_USERNAME[] = "-u";
 const char OPT_PASSWORD[] = "-p";
 const char OPT_STATUS[] = "-m";
 const char OPT_STATUS_FILE[] = "-f";
+const char OPT_STATUS_STDIN[] = "-r";
 
 const char USAGE[] = "\n"
                      "Usage: tweet [OPTION]...\n"
@@ -25,7 +26,8 @@ const char USAGE[] = "\n"
                      "  %3 <username>\tTwitter username to be used while using XAuth (-x option)\n"
                      "  %4 <password>\tTwitter password to be used while using XAuth (-x option)\n"
                      "  %5\t\tStatus update message, enclosed in double quotes\n"
-                     "  %6 <filename>\tThe file that contains status update message, used when -m is not specified.";
+                     "  %6 <filename>\tThe file that contains status update message, used when -m is not specified\n"
+                     "  %7\t\tRead message from standard in\n";
 
 
 class Helper : public QObject
@@ -46,7 +48,8 @@ public slots:
                                              OPT_USERNAME,
                                              OPT_PASSWORD,
                                              OPT_STATUS,
-                                             OPT_STATUS_FILE).toLatin1();
+                                             OPT_STATUS_FILE,
+                                             OPT_STATUS_STDIN).toLatin1();
 
         const char* helpText = help.constData();
 
@@ -72,6 +75,11 @@ public slots:
                     qApp->exit(1);
                 }
                 msgFile.close();
+            } else if (argList.contains(OPT_STATUS_STDIN)) {
+                qDebug() << "Please type the message to tweet:\n";
+                waitForMsg_ = true;
+                QTextStream in(stdin);
+                msg_ = in.readAll();  // This is how you read the entire line
             }
             // Start OAuth
             tweeter_.doOAuth();
@@ -88,6 +96,24 @@ public slots:
             if (argList.contains(OPT_STATUS)) {
                 waitForMsg_ = true;
                 msg_ = argList.at(argList.indexOf(OPT_STATUS) + 1);
+            } else if (argList.contains(OPT_STATUS_FILE)) {
+                waitForMsg_ = true;
+                QFile msgFile(argList.at(argList.indexOf(OPT_STATUS_FILE) + 1));
+                QTextStream in(&msgFile);
+                if (msgFile.open(QIODevice::ReadOnly | QIODevice::Text))
+                    msg_ = in.readAll();
+                else {
+                    qDebug() << "\nError: File is not readable text format!";
+                    qDebug() << helpText;
+                    msgFile.close();
+                    qApp->exit(1);
+                }
+                msgFile.close();
+            } else if (argList.contains(OPT_STATUS_STDIN)) {
+                qDebug() << "Please type the message to tweet:\n";
+                waitForMsg_ = true;
+                QTextStream in(stdin);
+                msg_ = in.readAll();  // This is how you read the entire line
             }
             // Start XAuth
             tweeter_.doXAuth(username, password);
@@ -107,8 +133,14 @@ public slots:
                 qApp->exit(1);
             }
             msgFile.close();
+        } else if (argList.contains(OPT_STATUS_STDIN)) {
+            qDebug() << "Please type the message to tweet:\n";
+            waitForMsg_ = true;
+            QTextStream in(stdin);
+            msg_ = in.readAll();  // This is how you read the entire line
         } else {
             qDebug() << helpText;
+            //qDebug() << "Please type the message to tweet:\n";
             qApp->exit(1);
         }
     }
